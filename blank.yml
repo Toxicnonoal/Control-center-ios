@@ -1,0 +1,31 @@
+name: Build APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Arrange files
+        run: |
+          mkdir -p app/src/main/kotlin/com/example/ioscc app/src/main/assets app/src/main/res/values
+          cp root_build.gradle.kts build.gradle.kts
+          cp app_build.gradle.kts app/build.gradle.kts
+          cp AndroidManifest.xml app/src/main/AndroidManifest.xml
+          cp arrays.xml app/src/main/res/values/arrays.xml
+          cp xposed_init.txt app/src/main/assets/xposed_init
+          cp MainHook.kt app/src/main/kotlin/com/example/ioscc/MainHook.kt
+          find . -path ./.git -prune -o -type f -print | sort
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.5
+      - run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IosControlCenter-apk
+          path: app/build/outputs/apk/debug/*.apk
